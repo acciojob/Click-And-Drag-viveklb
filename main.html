@@ -1,12 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Click and Drag</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Click and Drag</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+        }
+
+        .items {
+            position: relative;
+
+            /* Initial grid */
+            display: grid;
+            grid-template-columns: repeat(5, 80px);
+            grid-template-rows: repeat(5, 80px);
+            gap: 12px;
+
+            width: 480px;
+            height: 480px;
+            padding: 16px;
+
+            border: 3px solid #222;
+            background: #f2f2f2;
+        }
+
+        .item {
+            width: 80px;
+            height: 80px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #3498db;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+
+            border-radius: 6px;
+            cursor: grab;
+
+            user-select: none;
+        }
+
+        .item:active {
+            cursor: grabbing;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="items">
+
+<div class="items">
     <div class="item item1">01</div>
     <div class="item item2">02</div>
     <div class="item item3">03</div>
@@ -32,11 +85,105 @@
     <div class="item item23">23</div>
     <div class="item item24">24</div>
     <div class="item item25">25</div>
-  </div>
+</div>
 
 <script>
-//Your code goes here 
+    const container = document.querySelector(".items");
+    const items = document.querySelectorAll(".item");
+
+    /*
+        First save every cube's GRID position.
+        Then convert cubes to absolute positioning.
+        This keeps the initial grid exactly in place
+        while allowing individual cubes to be dragged.
+    */
+    const initialPositions = [];
+
+    items.forEach((item) => {
+        initialPositions.push({
+            left: item.offsetLeft,
+            top: item.offsetTop
+        });
+    });
+
+    items.forEach((item, index) => {
+        item.style.position = "absolute";
+        item.style.left = initialPositions[index].left + "px";
+        item.style.top = initialPositions[index].top + "px";
+    });
+
+    let selectedItem = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    items.forEach((item) => {
+
+        item.addEventListener("mousedown", function (event) {
+            selectedItem = item;
+
+            const itemRect = item.getBoundingClientRect();
+
+            offsetX = event.clientX - itemRect.left;
+            offsetY = event.clientY - itemRect.top;
+
+            selectedItem.style.zIndex = "1000";
+
+            event.preventDefault();
+        });
+
+    });
+
+    document.addEventListener("mousemove", function (event) {
+
+        if (!selectedItem) {
+            return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+
+        let newLeft =
+            event.clientX -
+            containerRect.left -
+            offsetX;
+
+        let newTop =
+            event.clientY -
+            containerRect.top -
+            offsetY;
+
+        /*
+            Maximum positions are calculated using the
+            actual container and cube dimensions.
+            Therefore the full cube always stays inside.
+        */
+        const maxLeft =
+            container.clientWidth -
+            selectedItem.offsetWidth;
+
+        const maxTop =
+            container.clientHeight -
+            selectedItem.offsetHeight;
+
+        /*
+            Boundary constraints
+        */
+        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+
+        selectedItem.style.left = newLeft + "px";
+        selectedItem.style.top = newTop + "px";
+    });
+
+    document.addEventListener("mouseup", function () {
+
+        if (selectedItem) {
+            selectedItem.style.zIndex = "";
+            selectedItem = null;
+        }
+
+    });
+
 </script>
 
-  </body>
+</body>
 </html>
